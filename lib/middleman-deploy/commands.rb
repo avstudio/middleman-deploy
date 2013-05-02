@@ -24,9 +24,9 @@ module Middleman
 
       desc "deploy", "Deploy build directory to a remote host via rsync or git"
       method_option "clean",
-      :type => :boolean,
-      :aliases => "-c",
-      :desc => "Remove orphaned files or directories on the remote host"
+        :type => :boolean,
+        :aliases => "-c",
+        :desc => "Remove orphaned files or directories on the remote host"
       def deploy
         send("deploy_#{self.deploy_options.method}")
       end
@@ -36,41 +36,41 @@ module Middleman
       def print_usage_and_die(message)
         raise Error, "ERROR: " + message + "\n" + <<EOF
 
-You should follow one of the three examples below to setup the deploy
-extension in config.rb.
+        You should follow one of the three examples below to setup the deploy
+        extension in config.rb.
 
-# To deploy the build directory to a remote host via rsync:
-activate :deploy do |deploy|
-  deploy.method = :rsync
-  # host, user, and path *must* be set
-  deploy.user = "tvaughan"
-  deploy.host = "www.example.com"
-  deploy.path = "/srv/www/site"
-  # clean is optional (default is false)
-  deploy.clean = true
-end
+          # To deploy the build directory to a remote host via rsync:
+        activate :deploy do |deploy|
+          deploy.method = :rsync
+          # host, user, and path *must* be set
+          deploy.user = "tvaughan"
+          deploy.host = "www.example.com"
+          deploy.path = "/srv/www/site"
+          # clean is optional (default is false)
+          deploy.clean = true
+        end
 
-# To deploy to a remote branch via git (e.g. gh-pages on github):
-activate :deploy do |deploy|
-  deploy.method = :git
-  # remote is optional (default is "origin")
-  # run `git remote -v` to see a list of possible remotes
-  deploy.remote = "some-other-remote-name"
-  # branch is optional (default is "gh-pages")
-  # run `git branch -a` to see a list of possible branches
-  deploy.branch = "some-other-branch-name"
-end
+        # To deploy to a remote branch via git (e.g. gh-pages on github):
+        activate :deploy do |deploy|
+          deploy.method = :git
+          # remote is optional (default is "origin")
+          # run `git remote -v` to see a list of possible remotes
+          deploy.remote = "some-other-remote-name"
+          # branch is optional (default is "gh-pages")
+          # run `git branch -a` to see a list of possible branches
+          deploy.branch = "some-other-branch-name"
+        end
 
-# To deploy the build directory to a remote host via ftp:
-activate :deploy do |deploy|
-  deploy.method = :ftp
-  # host, user, passwword and path *must* be set
-  deploy.host = "ftp.example.com"
-  deploy.user = "tvaughan"
-  deploy.password = "secret"
-  deploy.path = "/srv/www/site"
-end
-EOF
+        # To deploy the build directory to a remote host via ftp:
+        activate :deploy do |deploy|
+          deploy.method = :ftp
+          # host, user, passwword and path *must* be set
+          deploy.host = "ftp.example.com"
+          deploy.user = "tvaughan"
+          deploy.password = "secret"
+          deploy.path = "/srv/www/site"
+        end
+        EOF
       end
 
       def deploy_options
@@ -106,10 +106,11 @@ EOF
         port = self.deploy_options.port
         user = self.deploy_options.user
         path = self.deploy_options.path
+        build_dir = self.deploy_options.build_dir || 'build'
 
         puts "## Deploying via rsync to #{user}@#{host}:#{path} port=#{port}"
 
-        command = "rsync -avze '" + "ssh -p #{port}" + "' build/ #{user}@#{host}:#{path}"
+        command = "rsync -avze '" + "ssh -p #{port}" + "' #{build_dir}/ #{user}@#{host}:#{path}"
 
         if options.has_key? "clean"
           clean = options.clean
@@ -127,7 +128,7 @@ EOF
       def deploy_git
         remote = self.deploy_options.remote
         branch = self.deploy_options.branch
-
+        build_dir = self.deploy_options.build_dir || 'build'
         puts "## Deploying via git to remote=\"#{remote}\" and branch=\"#{branch}\""
 
         #check if remote is not a git url
@@ -141,7 +142,7 @@ EOF
           exit
         end
 
-        Dir.chdir('build') do
+        Dir.chdir(build_dir) do
           unless File.exists?('.git')
             `git init`
             `git remote add origin #{remote}`
@@ -174,6 +175,7 @@ EOF
         user = self.deploy_options.user
         pass = self.deploy_options.password
         path = self.deploy_options.path
+        build_dir = self.deploy_options.build_dir || 'build'
 
         puts "## Deploying via ftp to #{user}@#{host}:#{path}"
 
@@ -182,7 +184,7 @@ EOF
         ftp.chdir(path)
         ftp.passive = true
 
-        Dir.chdir('build/') do
+        Dir.chdir("#{build_dir}/") do
           files = Dir.glob('**/*', File::FNM_DOTMATCH)
           files.reject { |a| a =~ Regexp.new('\.$') }.each do |f|
             if File.directory?(f)
